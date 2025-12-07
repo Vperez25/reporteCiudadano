@@ -4,11 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 
-console.log('🔍 DEBUG en SplashScreen:');
-console.log('auth:', auth);
-console.log('auth type:', typeof auth);
-console.log('auth keys:', auth ? Object.keys(auth) : 'undefined');
-
 export default function SplashScreen({ navigation }) {
   useEffect(() => {
     // Verificar si el usuario ya está autenticado

@@ -1,7 +1,5 @@
 import './firebaseConfig'; 
-console.log('=========================');
-console.log('APP.JS: firebaseConfig importado');
-console.log('=========================');
+
 import { TouchableOpacity, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
