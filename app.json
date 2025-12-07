@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "feed-reportes",
+    "slug": "feed-reportes",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.feedreport.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Esta aplicación necesita acceso a la cámara para capturar imágenes de los reportes.",
+        "NSPhotoLibraryUsageDescription": "Esta aplicación necesita acceso a tu galería para seleccionar imágenes.",
+        "NSLocationWhenInUseUsageDescription": "Esta aplicación necesita acceso a tu ubicación para registrar la posición de los reportes.",
+        "NSLocationAlwaysUsageDescription": "Esta aplicación necesita acceso a tu ubicación para registrar la posición de los reportes."
+      }
+    },
+    "android": {
+      "package": "com.feedreport.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Esta aplicación necesita acceso a tu ubicación para registrar la posición de los reportes."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Esta aplicación necesita acceso a tu galería para seleccionar imágenes.",
+          "cameraPermission": "Esta aplicación necesita acceso a la cámara para capturar imágenes de los reportes."
+        }
+      ]
+    ]
+  }
+}

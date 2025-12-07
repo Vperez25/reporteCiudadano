@@ -1,0 +1,19 @@
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Expo
+.expo/
+.expo-shared/
+
+# Metro bundler cache
+metro-cache/
+.expo/web-build/
+
+
+# TypeScript
+*.tsbuildinfo
+
+
+
