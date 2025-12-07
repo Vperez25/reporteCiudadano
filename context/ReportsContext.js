@@ -1,39 +1,48 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 
-// Crear el contexto
 const ReportsContext = createContext();
 
-// Hook personalizado para usar el contexto fácilmente
-export const useReports = () => {
-  const context = useContext(ReportsContext);
-  if (!context) {
-    throw new Error('useReports debe usarse dentro de un ReportsProvider');
-  }
-  return context;
-};
+export const useReports = () => useContext(ReportsContext);
 
-// Provider del contexto
 export const ReportsProvider = ({ children }) => {
   const [reports, setReports] = useState([]);
 
-  // Función para agregar un nuevo reporte
-  const addReport = (newReport) => {
-    const reportWithId = {
-      ...newReport,
-      id: Date.now().toString(), // ID único basado en timestamp
-      time: 'hace un momento',
-      user: 'Usuario Actual', // Puedes personalizarlo
-    };
-    setReports((prevReports) => [reportWithId, ...prevReports]);
+  // ✅ ESCUCHAR reportes en tiempo real
+  useEffect(() => {
+    const q = query(
+      collection(db, 'reports'),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsub = onSnapshot(q, snap => {
+      const data = snap.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }));
+      setReports(data);
+    });
+
+    return () => unsub();
+  }, []);
+
+
+  // ✅ AGREGAR reporte a Firestore
+  const addReport = async (newReport) => {
+    try {
+      await addDoc(collection(db, 'reports'), {
+        ...newReport,
+        createdAt: new Date(),
+      });
+    } catch (e) {
+      console.error('Error guardando reporte:', e);
+    }
   };
 
-  // Función para eliminar un reporte (opcional)
-  const deleteReport = (reportId) => {
-    setReports((prevReports) => prevReports.filter(report => report.id !== reportId));
-  };
 
   return (
-    <ReportsContext.Provider value={{ reports, addReport, deleteReport }}>
+    <ReportsContext.Provider value={{ reports, addReport }}>
       {children}
     </ReportsContext.Provider>
   );

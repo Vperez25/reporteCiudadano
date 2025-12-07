@@ -4,10 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import { useReports } from '../context/ReportsContext';
+import { uploadImageToImgBB } from '../imageUpload';
+import { auth } from '../firebaseConfig';
+
+
 
 export default function AddReport({ navigation }) {
   const { addReport } = useReports();
-  
+
   // Estados para manejar la información del reporte
   const [location, setLocation] = useState(null);
   const [image, setImage] = useState(null);
@@ -18,10 +22,10 @@ export default function AddReport({ navigation }) {
   const getLocation = async () => {
     try {
       setLoadingLocation(true);
-      
-      
+
+
       const { status } = await Location.requestForegroundPermissionsAsync();
-      
+
       if (status !== 'granted') {
         Alert.alert(
           'Permiso denegado',
@@ -32,18 +36,18 @@ export default function AddReport({ navigation }) {
         return;
       }
 
-      
+
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
 
-      
+
       const [address] = await Location.reverseGeocodeAsync({
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
       });
 
-      const locationString = address 
+      const locationString = address
         ? `${address.street || ''} ${address.city || ''}, ${address.region || ''}`.trim()
         : `${currentLocation.coords.latitude.toFixed(4)}, ${currentLocation.coords.longitude.toFixed(4)}`;
 
@@ -64,9 +68,9 @@ export default function AddReport({ navigation }) {
   // Función para tomar una foto con la cámara
   const takePhoto = async () => {
     try {
-      
+
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      
+
       if (status !== 'granted') {
         Alert.alert(
           'Permiso denegado',
@@ -76,7 +80,7 @@ export default function AddReport({ navigation }) {
         return;
       }
 
-      
+
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -95,52 +99,60 @@ export default function AddReport({ navigation }) {
   };
 
   // Función para enviar el reporte
-  const sendReport = () => {
-    // Validaciones
+  const sendReport = async () => {
     if (!location) {
-      Alert.alert('Ubicación requerida', 'Por favor activa la ubicación antes de enviar el reporte.');
+      Alert.alert('Ubicación requerida');
       return;
     }
 
     if (!image) {
-      Alert.alert('Imagen requerida', 'Por favor toma una foto antes de enviar el reporte.');
+      Alert.alert('Imagen requerida');
       return;
     }
 
     if (!description.trim()) {
-      Alert.alert('Descripción requerida', 'Por favor agrega una descripción del problema.');
+      Alert.alert('Descripción requerida');
       return;
     }
 
-    // Crear el objeto del reporte
-    const newReport = {
-      location: location.address,
-      coords: location.coords,
-      image: image,
-      description: description.trim(),
-    };
+    try {
+      const imageUrl = await uploadImageToImgBB(image);
 
-    // Agregar el reporte al contexto
-    addReport(newReport);
+      const user = auth.currentUser;
 
-    // Mostrar mensaje de éxito
-    Alert.alert(
-      'Reporte enviado',
-      'Tu reporte se ha enviado correctamente',
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Limpiar el formulario
-            setLocation(null);
-            setImage(null);
-            setDescription('');
-            // Navegar de regreso al feed
-            navigation.goBack();
-          }
-        }
-      ]
-    );
+      // ✅ DEBUG (puedes borrarlo después)
+      console.log('USER AUTH:', {
+        uid: user?.uid,
+        displayName: user?.displayName,
+        email: user?.email,
+      });
+
+      const newReport = {
+        location: location.address,
+        coords: location.coords,
+        image: imageUrl,
+        description: description.trim(),
+
+        // ✅ USUARIO
+        userId: user ? user.uid : null,
+        userName: user?.displayName || user?.email || 'Usuario anónimo',
+
+        createdAt: new Date(),
+      };
+
+      await addReport(newReport);
+
+      Alert.alert('Reporte enviado correctamente');
+
+      setLocation(null);
+      setImage(null);
+      setDescription('');
+      navigation.goBack();
+
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'No se pudo enviar el reporte');
+    }
   };
 
   return (
@@ -155,8 +167,8 @@ export default function AddReport({ navigation }) {
               <Text style={styles.infoText}>{location.address}</Text>
             </View>
           ) : (
-            <TouchableOpacity 
-              style={[styles.button, loadingLocation && styles.buttonDisabled]} 
+            <TouchableOpacity
+              style={[styles.button, loadingLocation && styles.buttonDisabled]}
               onPress={getLocation}
               disabled={loadingLocation}
             >
@@ -176,8 +188,8 @@ export default function AddReport({ navigation }) {
           {image ? (
             <View>
               <Image source={{ uri: image }} style={styles.previewImage} />
-              <TouchableOpacity 
-                style={[styles.button, { marginTop: 10 }]} 
+              <TouchableOpacity
+                style={[styles.button, { marginTop: 10 }]}
                 onPress={takePhoto}
               >
                 <Text style={styles.buttonText}>Tomar otra foto</Text>
@@ -196,9 +208,9 @@ export default function AddReport({ navigation }) {
         <Ionicons name="document-text-outline" size={24} color="#555" />
         <View style={styles.rowText}>
           <Text style={styles.label}>Descripción</Text>
-          <TextInput 
-            style={styles.textInput} 
-            placeholder="Describe el problema que quieres reportar" 
+          <TextInput
+            style={styles.textInput}
+            placeholder="Describe el problema que quieres reportar"
             multiline
             value={description}
             onChangeText={setDescription}
@@ -215,53 +227,53 @@ export default function AddReport({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    padding: 20, 
-    backgroundColor: '#f2f2f2' 
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f2f2f2'
   },
-  row: { 
-    flexDirection: 'row', 
-    alignItems: 'flex-start', 
-    marginBottom: 20 
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 20
   },
-  rowText: { 
-    marginLeft: 10, 
-    flex: 1 
+  rowText: {
+    marginLeft: 10,
+    flex: 1
   },
-  label: { 
-    fontWeight: 'bold', 
-    marginBottom: 5 
+  label: {
+    fontWeight: 'bold',
+    marginBottom: 5
   },
-  button: { 
-    backgroundColor: '#007bff', 
-    padding: 8, 
-    borderRadius: 5 
+  button: {
+    backgroundColor: '#007bff',
+    padding: 8,
+    borderRadius: 5
   },
   buttonDisabled: {
     backgroundColor: '#6c757d',
   },
-  buttonText: { 
+  buttonText: {
     color: '#fff',
     textAlign: 'center',
   },
-  textInput: { 
-    backgroundColor: '#fff', 
-    borderRadius: 5, 
-    padding: 10, 
-    minHeight: 60 
+  textInput: {
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    padding: 10,
+    minHeight: 60
   },
-  sendButton: { 
-    backgroundColor: 'green', 
-    padding: 15, 
-    borderRadius: 8, 
-    alignItems: 'center', 
-    marginTop: 10 
+  sendButton: {
+    backgroundColor: 'green',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10
   },
-  sendButtonText: { 
-    color: '#fff', 
-    fontWeight: 'bold', 
-    fontSize: 16 
+  sendButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16
   },
   infoBox: {
     backgroundColor: '#e7f3ff',
