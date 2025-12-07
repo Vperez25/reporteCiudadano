@@ -11,6 +11,7 @@ import SplashScreen from './Screens/SplashScreen';
 import LoginScreen from './Screens/LoginScreen';
 import SignUpScreen from './Screens/SignUpScreen';
 import ReportFeed from './Screens/ReportFeed';
+import ProfileScreen from './Screens/ProfileScreen';
 import AddReport from './Screens/AddReport';
 import SettingsScreen from './Screens/SettingsScreen';
 
@@ -119,6 +120,16 @@ export default function App() {
               headerTitleStyle: {
                 fontWeight: 'bold',
               },
+            }}
+          />
+          <Stack.Screen 
+            name="Profile" 
+            component={ProfileScreen} 
+            options={{ 
+              title: 'Mi Perfil',
+              headerStyle: { backgroundColor: '#1A72DD' },
+              headerTintColor: '#fff',
+              headerTitleStyle: { fontWeight: 'bold' },
             }}
           />
         </Stack.Navigator>

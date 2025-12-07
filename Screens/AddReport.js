@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import { useReports } from '../context/ReportsContext';
+import { auth } from '../firebaseConfig';
 
 export default function AddReport({ navigation }) {
   const { addReport } = useReports();
@@ -19,7 +20,7 @@ export default function AddReport({ navigation }) {
     try {
       setLoadingLocation(true);
       
-      
+      // Solicitar permisos de ubicación
       const { status } = await Location.requestForegroundPermissionsAsync();
       
       if (status !== 'granted') {
@@ -32,12 +33,12 @@ export default function AddReport({ navigation }) {
         return;
       }
 
-      
+      // Obtener la ubicación actual
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
 
-      
+      // Obtener el nombre de la ubicación (geocoding inverso)
       const [address] = await Location.reverseGeocodeAsync({
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
@@ -64,7 +65,7 @@ export default function AddReport({ navigation }) {
   // Función para tomar una foto con la cámara
   const takePhoto = async () => {
     try {
-      
+      // Solicitar permisos de cámara
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       
       if (status !== 'granted') {
@@ -76,7 +77,7 @@ export default function AddReport({ navigation }) {
         return;
       }
 
-      
+      // Abrir la cámara
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -112,12 +113,19 @@ export default function AddReport({ navigation }) {
       return;
     }
 
+    // Obtener usuario actual de Firebase
+    const currentUser = auth.currentUser;
+    const userName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Usuario';
+
     // Crear el objeto del reporte
     const newReport = {
       location: location.address,
       coords: location.coords,
       image: image,
       description: description.trim(),
+      user: userName, 
+      userId: currentUser?.uid,
+      userEmail: currentUser?.email,
     };
 
     // Agregar el reporte al contexto
