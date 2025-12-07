@@ -77,9 +77,9 @@ export default function SettingsScreen({ navigation }) {
           onPress: async () => {
             try {
               await signOut(auth);
-              console.log('✅ Sesión cerrada');
+              console.log('Sesión cerrada');
             } catch (error) {
-              console.error('❌ Error cerrando sesión:', error);
+              console.error('Error cerrando sesión:', error);
               Alert.alert('Error', 'No se pudo cerrar la sesión');
             }
           }
@@ -226,9 +226,7 @@ export default function SettingsScreen({ navigation }) {
         <Text style={styles.footerText}>
           Reportes Ciudadanos © 2024
         </Text>
-        <Text style={styles.footerText}>
-          Hecho con ❤️ para la comunidad
-        </Text>
+        
       </View>
     </ScrollView>
   );

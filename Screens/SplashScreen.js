@@ -10,13 +10,13 @@ export default function SplashScreen({ navigation }) {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setTimeout(() => {
         if (user) {
-          // Usuario autenticado -> ir al feed
+          
           navigation.replace('Main');
         } else {
-          // No autenticado -> ir a login
+          
           navigation.replace('Login');
         }
-      }, 2000); // Mostrar splash por 2 segundos
+      }, 2000); 
     });
 
     return unsubscribe;

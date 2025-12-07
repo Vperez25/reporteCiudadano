@@ -23,24 +23,24 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Sanitizar entrada de usuario
+  
   const sanitizeInput = (input) => {
     return input.trim().replace(/[<>]/g, '');
   };
 
-  // Validar email
+  
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Manejar inicio de sesión
+  
   const handleLogin = async () => {
-    // Sanitizar datos
+    
     const sanitizedEmail = sanitizeInput(email);
     const sanitizedPassword = sanitizeInput(password);
 
-    // Validaciones
+    
     if (!sanitizedEmail || !sanitizedPassword) {
       Alert.alert('Error', 'Por favor completa todos los campos');
       return;
@@ -59,14 +59,14 @@ export default function LoginScreen({ navigation }) {
     try {
       setLoading(true);
 
-      // Iniciar sesión con Firebase
+      
       const userCredential = await signInWithEmailAndPassword(
         auth, 
         sanitizedEmail, 
         sanitizedPassword
       );
 
-      // Guardar credenciales si "Recordar contraseña" está marcado
+      
       if (rememberMe) {
         await AsyncStorage.setItem('savedEmail', sanitizedEmail);
         await AsyncStorage.setItem('rememberMe', 'true');
@@ -75,13 +75,15 @@ export default function LoginScreen({ navigation }) {
         await AsyncStorage.removeItem('rememberMe');
       }
 
-      console.log('✅ Login exitoso:', userCredential.user.email);
+      console.log('Login exitoso:', userCredential.user.email);
       setLoading(false);
       
-      // Navegar al feed (la navegación se manejará automáticamente)
+      
+      navigation.replace('Main');
+      
     } catch (error) {
       setLoading(false);
-      console.error('❌ Error en login:', error);
+      console.error('Error en login:', error);
       
       let errorMessage = 'Error al iniciar sesión';
       
@@ -101,6 +103,9 @@ export default function LoginScreen({ navigation }) {
         case 'auth/too-many-requests':
           errorMessage = 'Demasiados intentos. Intenta más tarde';
           break;
+        case 'auth/invalid-credential':
+          errorMessage = 'Email o contraseña incorrectos';
+          break;
         default:
           errorMessage = 'Error al iniciar sesión. Verifica tus datos';
       }
@@ -109,7 +114,7 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  // Cargar email guardado al montar
+  
   React.useEffect(() => {
     const loadSavedEmail = async () => {
       const savedEmail = await AsyncStorage.getItem('savedEmail');
@@ -133,16 +138,16 @@ export default function LoginScreen({ navigation }) {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
+        
         <View style={styles.header}>
           <Ionicons name="megaphone" size={60} color="#1A72DD" />
           <Text style={styles.title}>Reportes Ciudadanos</Text>
           <Text style={styles.subtitle}>Ingresa a tu cuenta</Text>
         </View>
 
-        {/* Formulario */}
+       
         <View style={styles.form}>
-          {/* Campo Email */}
+          
           <View style={styles.inputContainer}>
             <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
@@ -157,7 +162,7 @@ export default function LoginScreen({ navigation }) {
             />
           </View>
 
-          {/* Campo Contraseña */}
+          
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
@@ -181,7 +186,7 @@ export default function LoginScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Recordar Contraseña */}
+          
           <TouchableOpacity 
             style={styles.checkboxContainer}
             onPress={() => setRememberMe(!rememberMe)}
@@ -192,7 +197,7 @@ export default function LoginScreen({ navigation }) {
             <Text style={styles.checkboxLabel}>Recordar Contraseña</Text>
           </TouchableOpacity>
 
-          {/* Botón Iniciar Sesión */}
+          
           <TouchableOpacity 
             style={[styles.loginButton, loading && styles.loginButtonDisabled]}
             onPress={handleLogin}
@@ -205,15 +210,15 @@ export default function LoginScreen({ navigation }) {
             )}
           </TouchableOpacity>
 
-          {/* Olvidaste tu contraseña */}
+          
           <View style={styles.forgotPasswordContainer}>
             <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+            <TouchableOpacity onPress={() => Alert.alert('Próximamente', 'Función de recuperación de contraseña')}>
               <Text style={styles.forgotPasswordLink}>Olvidé mi contraseña</Text>
             </TouchableOpacity>
           </View>
 
-          {/* No tienes cuenta */}
+          
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>¿No tienes cuenta? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>

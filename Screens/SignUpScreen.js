@@ -25,36 +25,36 @@ export default function SignUpScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Sanitizar entrada de usuario
+  
   const sanitizeInput = (input) => {
     return input.trim().replace(/[<>]/g, '');
   };
 
-  // Validar email
+  
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Validar nombre
+  
   const validateName = (name) => {
     return name.length >= 3 && /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(name);
   };
 
-  // Validar contraseña (mínimo 6 caracteres, una mayúscula, un número)
+  
   const validatePassword = (password) => {
     return password.length >= 6;
   };
 
-  // Manejar registro
+  
   const handleSignUp = async () => {
-    // Sanitizar todos los datos
+    
     const sanitizedName = sanitizeInput(fullName);
     const sanitizedEmail = sanitizeInput(email);
     const sanitizedPassword = sanitizeInput(password);
     const sanitizedConfirmPassword = sanitizeInput(confirmPassword);
 
-    // Validaciones
+    
     if (!sanitizedName || !sanitizedEmail || !sanitizedPassword || !sanitizedConfirmPassword) {
       Alert.alert('Error', 'Por favor completa todos los campos');
       return;
@@ -89,7 +89,7 @@ export default function SignUpScreen({ navigation }) {
     try {
       setLoading(true);
 
-      // Crear usuario en Firebase Auth
+      
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         sanitizedEmail,
@@ -98,12 +98,12 @@ export default function SignUpScreen({ navigation }) {
 
       const user = userCredential.user;
 
-      // Actualizar perfil con el nombre
+      
       await updateProfile(user, {
         displayName: sanitizedName,
       });
 
-      // Guardar información adicional en Firestore
+      
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         name: sanitizedName,
@@ -112,7 +112,7 @@ export default function SignUpScreen({ navigation }) {
         profilePicture: null,
       });
 
-      console.log('✅ Registro exitoso:', user.email);
+      console.log('Registro exitoso:', user.email);
       setLoading(false);
 
       Alert.alert(
@@ -122,14 +122,14 @@ export default function SignUpScreen({ navigation }) {
           {
             text: 'OK',
             onPress: () => {
-              // La navegación se manejará automáticamente
+              navigation.replace('Main');
             }
           }
         ]
       );
     } catch (error) {
       setLoading(false);
-      console.error('❌ Error en registro:', error);
+      console.error('Error en registro:', error);
       
       let errorMessage = 'Error al crear la cuenta';
       
@@ -163,7 +163,7 @@ export default function SignUpScreen({ navigation }) {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
+        
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
@@ -177,9 +177,9 @@ export default function SignUpScreen({ navigation }) {
           <Text style={styles.subtitle}>Ingresar tus datos</Text>
         </View>
 
-        {/* Formulario */}
+        
         <View style={styles.form}>
-          {/* Campo Nombre Completo */}
+          
           <View style={styles.inputContainer}>
             <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
@@ -192,7 +192,7 @@ export default function SignUpScreen({ navigation }) {
             />
           </View>
 
-          {/* Campo Email */}
+          
           <View style={styles.inputContainer}>
             <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
@@ -207,7 +207,7 @@ export default function SignUpScreen({ navigation }) {
             />
           </View>
 
-          {/* Campo Contraseña */}
+          
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
@@ -231,7 +231,7 @@ export default function SignUpScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Campo Confirmar Contraseña */}
+          
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
@@ -255,7 +255,6 @@ export default function SignUpScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Indicador de fuerza de contraseña */}
           {password.length > 0 && (
             <View style={styles.passwordStrength}>
               <Text style={styles.passwordStrengthText}>
@@ -266,7 +265,7 @@ export default function SignUpScreen({ navigation }) {
             </View>
           )}
 
-          {/* Botón Crear Cuenta */}
+          
           <TouchableOpacity 
             style={[styles.signupButton, loading && styles.signupButtonDisabled]}
             onPress={handleSignUp}
@@ -279,7 +278,7 @@ export default function SignUpScreen({ navigation }) {
             )}
           </TouchableOpacity>
 
-          {/* Ya tienes cuenta */}
+          
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>¿Ya tienes cuenta? </Text>
             <TouchableOpacity onPress={() => navigation.goBack()}>

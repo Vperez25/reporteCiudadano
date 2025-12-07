@@ -21,14 +21,14 @@ export default function App() {
     <ReportsProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Splash">
-          {/* Pantalla de Splash */}
+          
           <Stack.Screen 
             name="Splash" 
             component={SplashScreen}
             options={{ headerShown: false }}
           />
 
-          {/* Pantallas de Autenticación */}
+          
           <Stack.Screen 
             name="Login" 
             component={LoginScreen}
@@ -41,7 +41,7 @@ export default function App() {
             options={{ headerShown: false }}
           />
 
-          {/* Pantallas Principales (Main) */}
+          
           <Stack.Screen 
             name="Main" 
             component={ReportFeed} 
@@ -56,7 +56,7 @@ export default function App() {
               },
               headerRight: () => (
                 <View style={{ flexDirection: 'row', marginRight: 10 }}>
-                  {/* Botón Agregar Reporte */}
+                  
                   <TouchableOpacity
                     onPress={() => navigation.navigate('AddReport')}
                     style={{ 
@@ -74,7 +74,7 @@ export default function App() {
                     </Text>
                   </TouchableOpacity>
 
-                  {/* Botón Configuración */}
+                  
                   <TouchableOpacity
                     onPress={() => navigation.navigate('Settings')}
                     style={{ 

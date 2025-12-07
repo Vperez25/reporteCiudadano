@@ -19,7 +19,7 @@ export default function AddReport({ navigation }) {
     try {
       setLoadingLocation(true);
       
-      // Solicitar permisos de ubicación
+      
       const { status } = await Location.requestForegroundPermissionsAsync();
       
       if (status !== 'granted') {
@@ -32,12 +32,12 @@ export default function AddReport({ navigation }) {
         return;
       }
 
-      // Obtener la ubicación actual
+      
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
 
-      // Obtener el nombre de la ubicación (geocoding inverso)
+      
       const [address] = await Location.reverseGeocodeAsync({
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
@@ -64,7 +64,7 @@ export default function AddReport({ navigation }) {
   // Función para tomar una foto con la cámara
   const takePhoto = async () => {
     try {
-      // Solicitar permisos de cámara
+      
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       
       if (status !== 'granted') {
@@ -76,7 +76,7 @@ export default function AddReport({ navigation }) {
         return;
       }
 
-      // Abrir la cámara
+      
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
