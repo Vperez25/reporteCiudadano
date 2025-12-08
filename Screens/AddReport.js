@@ -3,48 +3,41 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Alert } fro
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
+import { doc, getDoc } from 'firebase/firestore';
 import { useReports } from '../context/ReportsContext';
-import { auth } from '../firebaseConfig';
+import { uploadImageToImgBB } from '../imageUpload';
+import { auth, db } from '../firebaseConfig';
 
 export default function AddReport({ navigation }) {
   const { addReport } = useReports();
-  
-  // Estados para manejar la información del reporte
+
   const [location, setLocation] = useState(null);
   const [image, setImage] = useState(null);
   const [description, setDescription] = useState('');
   const [loadingLocation, setLoadingLocation] = useState(false);
 
-  // Función para obtener la ubicación
   const getLocation = async () => {
     try {
       setLoadingLocation(true);
-      
-      // Solicitar permisos de ubicación
+
       const { status } = await Location.requestForegroundPermissionsAsync();
-      
+
       if (status !== 'granted') {
-        Alert.alert(
-          'Permiso denegado',
-          'Necesitamos acceso a tu ubicación para crear el reporte.',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Permiso denegado', 'Necesitamos acceso a tu ubicación.');
         setLoadingLocation(false);
         return;
       }
 
-      // Obtener la ubicación actual
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
 
-      // Obtener el nombre de la ubicación (geocoding inverso)
       const [address] = await Location.reverseGeocodeAsync({
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
       });
 
-      const locationString = address 
+      const locationString = address
         ? `${address.street || ''} ${address.city || ''}, ${address.region || ''}`.trim()
         : `${currentLocation.coords.latitude.toFixed(4)}, ${currentLocation.coords.longitude.toFixed(4)}`;
 
@@ -57,27 +50,20 @@ export default function AddReport({ navigation }) {
       setLoadingLocation(false);
     } catch (error) {
       console.error('Error obteniendo ubicación:', error);
-      Alert.alert('Error', 'No se pudo obtener la ubicación. Intenta de nuevo.');
+      Alert.alert('Error', 'No se pudo obtener la ubicación.');
       setLoadingLocation(false);
     }
   };
 
-  // Función para tomar una foto con la cámara
   const takePhoto = async () => {
     try {
-      // Solicitar permisos de cámara
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      
+
       if (status !== 'granted') {
-        Alert.alert(
-          'Permiso denegado',
-          'Necesitamos acceso a tu cámara para tomar la foto del reporte.',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Permiso denegado', 'Necesitamos acceso a tu cámara.');
         return;
       }
 
-      // Abrir la cámara
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -91,13 +77,11 @@ export default function AddReport({ navigation }) {
       }
     } catch (error) {
       console.error('Error tomando foto:', error);
-      Alert.alert('Error', 'No se pudo tomar la foto. Intenta de nuevo.');
+      Alert.alert('Error', 'No se pudo tomar la foto.');
     }
   };
 
-  // Función para enviar el reporte
-  const sendReport = () => {
-    // Validaciones
+  const sendReport = async () => {
     if (!location) {
       Alert.alert('Ubicación requerida', 'Por favor activa la ubicación antes de enviar el reporte.');
       return;
@@ -113,47 +97,56 @@ export default function AddReport({ navigation }) {
       return;
     }
 
-    // Obtener usuario actual de Firebase
-    const currentUser = auth.currentUser;
-    const userName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Usuario';
+    try {
+      const imageUrl = await uploadImageToImgBB(image);
+      const user = auth.currentUser;
 
-    // Crear el objeto del reporte
-    const newReport = {
-      location: location.address,
-      coords: location.coords,
-      image: image,
-      description: description.trim(),
-      user: userName, 
-      userId: currentUser?.uid,
-      userEmail: currentUser?.email,
-    };
-
-    // Agregar el reporte al contexto
-    addReport(newReport);
-
-    // Mostrar mensaje de éxito
-    Alert.alert(
-      'Reporte enviado',
-      'Tu reporte se ha enviado correctamente',
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Limpiar el formulario
-            setLocation(null);
-            setImage(null);
-            setDescription('');
-            // Navegar de regreso al feed
-            navigation.goBack();
+      let userName = 'Usuario';
+      
+      if (user) {
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            userName = userData.name || user.displayName || user.email?.split('@')[0] || 'Usuario';
+          } else {
+            userName = user.displayName || user.email?.split('@')[0] || 'Usuario';
           }
+        } catch (error) {
+          console.error('Error obteniendo nombre:', error);
+          userName = user.displayName || user.email?.split('@')[0] || 'Usuario';
         }
-      ]
-    );
+      }
+
+      const newReport = {
+        location: location.address,
+        coords: location.coords,
+        image: imageUrl,
+        description: description.trim(),
+        userId: user?.uid,
+        userName: userName,
+        createdAt: new Date(),
+      };
+
+      await addReport(newReport);
+
+      Alert.alert('¡Reporte enviado!', 'Tu reporte se ha publicado correctamente.');
+
+      setLocation(null);
+      setImage(null);
+      setDescription('');
+      navigation.goBack();
+
+    } catch (error) {
+      console.error('Error enviando reporte:', error);
+      Alert.alert('Error', 'No se pudo enviar el reporte. Intenta de nuevo.');
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Sección de Ubicación */}
       <View style={styles.row}>
         <Ionicons name="location-outline" size={24} color="#555" />
         <View style={styles.rowText}>
@@ -163,8 +156,8 @@ export default function AddReport({ navigation }) {
               <Text style={styles.infoText}>{location.address}</Text>
             </View>
           ) : (
-            <TouchableOpacity 
-              style={[styles.button, loadingLocation && styles.buttonDisabled]} 
+            <TouchableOpacity
+              style={[styles.button, loadingLocation && styles.buttonDisabled]}
               onPress={getLocation}
               disabled={loadingLocation}
             >
@@ -176,7 +169,6 @@ export default function AddReport({ navigation }) {
         </View>
       </View>
 
-      {/* Sección de Imagen */}
       <View style={styles.row}>
         <Ionicons name="camera-outline" size={24} color="#555" />
         <View style={styles.rowText}>
@@ -184,8 +176,8 @@ export default function AddReport({ navigation }) {
           {image ? (
             <View>
               <Image source={{ uri: image }} style={styles.previewImage} />
-              <TouchableOpacity 
-                style={[styles.button, { marginTop: 10 }]} 
+              <TouchableOpacity
+                style={[styles.button, { marginTop: 10 }]}
                 onPress={takePhoto}
               >
                 <Text style={styles.buttonText}>Tomar otra foto</Text>
@@ -199,14 +191,13 @@ export default function AddReport({ navigation }) {
         </View>
       </View>
 
-      {/* Sección de Descripción */}
       <View style={styles.row}>
         <Ionicons name="document-text-outline" size={24} color="#555" />
         <View style={styles.rowText}>
           <Text style={styles.label}>Descripción</Text>
-          <TextInput 
-            style={styles.textInput} 
-            placeholder="Describe el problema que quieres reportar" 
+          <TextInput
+            style={styles.textInput}
+            placeholder="Describe el problema que quieres reportar"
             multiline
             value={description}
             onChangeText={setDescription}
@@ -214,7 +205,6 @@ export default function AddReport({ navigation }) {
         </View>
       </View>
 
-      {/* Botón de Enviar */}
       <TouchableOpacity style={styles.sendButton} onPress={sendReport}>
         <Text style={styles.sendButtonText}>Enviar reporte</Text>
       </TouchableOpacity>
@@ -223,53 +213,53 @@ export default function AddReport({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    padding: 20, 
-    backgroundColor: '#f2f2f2' 
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f2f2f2'
   },
-  row: { 
-    flexDirection: 'row', 
-    alignItems: 'flex-start', 
-    marginBottom: 20 
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 20
   },
-  rowText: { 
-    marginLeft: 10, 
-    flex: 1 
+  rowText: {
+    marginLeft: 10,
+    flex: 1
   },
-  label: { 
-    fontWeight: 'bold', 
-    marginBottom: 5 
+  label: {
+    fontWeight: 'bold',
+    marginBottom: 5
   },
-  button: { 
-    backgroundColor: '#007bff', 
-    padding: 8, 
-    borderRadius: 5 
+  button: {
+    backgroundColor: '#007bff',
+    padding: 8,
+    borderRadius: 5
   },
   buttonDisabled: {
     backgroundColor: '#6c757d',
   },
-  buttonText: { 
+  buttonText: {
     color: '#fff',
     textAlign: 'center',
   },
-  textInput: { 
-    backgroundColor: '#fff', 
-    borderRadius: 5, 
-    padding: 10, 
-    minHeight: 60 
+  textInput: {
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    padding: 10,
+    minHeight: 60
   },
-  sendButton: { 
-    backgroundColor: 'green', 
-    padding: 15, 
-    borderRadius: 8, 
-    alignItems: 'center', 
-    marginTop: 10 
+  sendButton: {
+    backgroundColor: 'green',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10
   },
-  sendButtonText: { 
-    color: '#fff', 
-    fontWeight: 'bold', 
-    fontSize: 16 
+  sendButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16
   },
   infoBox: {
     backgroundColor: '#e7f3ff',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -23,24 +23,19 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  
   const sanitizeInput = (input) => {
     return input.trim().replace(/[<>]/g, '');
   };
 
-  
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  
   const handleLogin = async () => {
-    
     const sanitizedEmail = sanitizeInput(email);
     const sanitizedPassword = sanitizeInput(password);
 
-    
     if (!sanitizedEmail || !sanitizedPassword) {
       Alert.alert('Error', 'Por favor completa todos los campos');
       return;
@@ -59,14 +54,12 @@ export default function LoginScreen({ navigation }) {
     try {
       setLoading(true);
 
-      
       const userCredential = await signInWithEmailAndPassword(
         auth, 
         sanitizedEmail, 
         sanitizedPassword
       );
 
-      
       if (rememberMe) {
         await AsyncStorage.setItem('savedEmail', sanitizedEmail);
         await AsyncStorage.setItem('rememberMe', 'true');
@@ -75,10 +68,7 @@ export default function LoginScreen({ navigation }) {
         await AsyncStorage.removeItem('rememberMe');
       }
 
-      console.log('Login exitoso:', userCredential.user.email);
       setLoading(false);
-      
-      
       navigation.replace('Main');
       
     } catch (error) {
@@ -104,7 +94,7 @@ export default function LoginScreen({ navigation }) {
           errorMessage = 'Demasiados intentos. Intenta más tarde';
           break;
         case 'auth/invalid-credential':
-          errorMessage = 'Email o contraseña incorrectos';
+          errorMessage = 'Credenciales inválidas. Verifica tu correo y contraseña';
           break;
         default:
           errorMessage = 'Error al iniciar sesión. Verifica tus datos';
@@ -114,15 +104,18 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  
-  React.useEffect(() => {
+  useEffect(() => {
     const loadSavedEmail = async () => {
-      const savedEmail = await AsyncStorage.getItem('savedEmail');
-      const savedRememberMe = await AsyncStorage.getItem('rememberMe');
-      
-      if (savedEmail && savedRememberMe === 'true') {
-        setEmail(savedEmail);
-        setRememberMe(true);
+      try {
+        const savedEmail = await AsyncStorage.getItem('savedEmail');
+        const savedRememberMe = await AsyncStorage.getItem('rememberMe');
+        
+        if (savedEmail && savedRememberMe === 'true') {
+          setEmail(savedEmail);
+          setRememberMe(true);
+        }
+      } catch (error) {
+        console.error('Error cargando email guardado:', error);
       }
     };
     
@@ -138,16 +131,13 @@ export default function LoginScreen({ navigation }) {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        
         <View style={styles.header}>
           <Ionicons name="megaphone" size={60} color="#1A72DD" />
           <Text style={styles.title}>Reportes Ciudadanos</Text>
           <Text style={styles.subtitle}>Ingresa a tu cuenta</Text>
         </View>
 
-       
         <View style={styles.form}>
-          
           <View style={styles.inputContainer}>
             <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
@@ -162,7 +152,6 @@ export default function LoginScreen({ navigation }) {
             />
           </View>
 
-          
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
@@ -186,7 +175,6 @@ export default function LoginScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          
           <TouchableOpacity 
             style={styles.checkboxContainer}
             onPress={() => setRememberMe(!rememberMe)}
@@ -194,10 +182,9 @@ export default function LoginScreen({ navigation }) {
             <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
               {rememberMe && <Ionicons name="checkmark" size={16} color="#fff" />}
             </View>
-            <Text style={styles.checkboxLabel}>Recordar Contraseña</Text>
+            <Text style={styles.checkboxLabel}>Recordar mi correo</Text>
           </TouchableOpacity>
 
-          
           <TouchableOpacity 
             style={[styles.loginButton, loading && styles.loginButtonDisabled]}
             onPress={handleLogin}
@@ -210,15 +197,6 @@ export default function LoginScreen({ navigation }) {
             )}
           </TouchableOpacity>
 
-          
-          <View style={styles.forgotPasswordContainer}>
-            <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
-            <TouchableOpacity onPress={() => Alert.alert('Próximamente', 'Función de recuperación de contraseña')}>
-              <Text style={styles.forgotPasswordLink}>Olvidé mi contraseña</Text>
-            </TouchableOpacity>
-          </View>
-
-          
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>¿No tienes cuenta? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
@@ -316,20 +294,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  forgotPasswordContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  forgotPasswordLink: {
-    fontSize: 14,
-    color: '#1A72DD',
-    fontWeight: '600',
   },
   signupContainer: {
     flexDirection: 'row',

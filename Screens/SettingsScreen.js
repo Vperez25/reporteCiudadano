@@ -78,6 +78,7 @@ export default function SettingsScreen({ navigation }) {
             try {
               await signOut(auth);
               console.log('Sesión cerrada');
+               navigation.replace('Login');
             } catch (error) {
               console.error('Error cerrando sesión:', error);
               Alert.alert('Error', 'No se pudo cerrar la sesión');

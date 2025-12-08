@@ -2,7 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function ReportCard({ user, location, time, description, image, coords }) {
+export default function ReportCard({
+  user,
+  location,
+  time,
+  description,
+  image,
+  coords,
+}) {
   return (
     <View style={styles.card}>
       {/* Información del usuario */}
@@ -12,7 +19,9 @@ export default function ReportCard({ user, location, time, description, image, c
         </View>
 
         <View style={styles.userText}>
-          <Text style={styles.userName}>{user}</Text>
+          <Text style={styles.userName}>
+            {user || 'Usuario anónimo'}
+          </Text>
           <Text style={styles.userLocation}>{location}</Text>
         </View>
 
@@ -21,8 +30,8 @@ export default function ReportCard({ user, location, time, description, image, c
 
       {/* Imagen del reporte */}
       {image ? (
-        <Image 
-          source={{ uri: image }} 
+        <Image
+          source={{ uri: image }}
           style={styles.reportImage}
           resizeMode="cover"
         />
@@ -36,7 +45,7 @@ export default function ReportCard({ user, location, time, description, image, c
       {/* Descripción */}
       <Text style={styles.description}>{description}</Text>
 
-      {/* Coordenadas (opcional, para debugging) */}
+      {/* Coordenadas (opcional) */}
       {coords && (
         <Text style={styles.coordsText}>
           📍 {coords.latitude.toFixed(6)}, {coords.longitude.toFixed(6)}
@@ -76,38 +85,46 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
   },
+
   profileIcon: {
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   userText: {
     marginLeft: 10,
     flex: 1,
   },
+
   userName: {
     fontWeight: 'bold',
   },
+
   userLocation: {
     color: 'gray',
     fontSize: 12,
   },
+
   timeText: {
     fontSize: 12,
     color: 'gray',
   },
+
   reportImage: {
     width: '100%',
     height: 250,
     borderRadius: 8,
     marginBottom: 10,
   },
+
   imagePlaceholder: {
     width: '100%',
     height: 200,
@@ -117,23 +134,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+
   imageText: {
     color: '#999',
     fontSize: 14,
     marginTop: 5,
   },
+
   description: {
     marginTop: 10,
     fontSize: 14,
     color: '#333',
     lineHeight: 20,
   },
+
   coordsText: {
     fontSize: 11,
     color: '#666',
     marginTop: 5,
     fontStyle: 'italic',
   },
+
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -142,10 +163,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
   },
+
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+
   actionText: {
     marginLeft: 5,
     fontSize: 13,

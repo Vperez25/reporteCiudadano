@@ -22,7 +22,7 @@ export default function ReportFeed() {
           reports.map((report) => (
             <ReportCard
               key={report.id}
-              user={report.user}
+              user={report.userName}
               location={report.location}
               time={report.time}
               description={report.description}
